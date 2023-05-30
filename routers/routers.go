@@ -5,15 +5,11 @@ import (
 	"simple-go-fiber-crud/controllers"
 )
 
-func helloWorld(c *fiber.Ctx) error {
-	return c.SendString("Hello World")
-}
-
 func SetupRoutes(app *fiber.App) {
-	app.Get("/", helloWorld)
-	app.Get("/todos", controllers.GetTodos)
-	app.Get("/todos/:id", controllers.GetTodoById)
-	app.Post("/todos", controllers.CreateTodo)
-	app.Put("/todos/:id", controllers.UpdateTodo)
-	app.Delete("/todos/:id", controllers.DeleteTodo)
+	todoRoutes := controllers.NewTodoController()
+	app.Get("/todos", todoRoutes.GetTodos)
+	app.Get("/todos/:id", todoRoutes.GetTodoById)
+	app.Post("/todos", todoRoutes.CreateTodo)
+	app.Put("/todos/:id", todoRoutes.UpdateTodo)
+	app.Delete("/todos/:id", todoRoutes.DeleteTodo)
 }

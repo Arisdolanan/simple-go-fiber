@@ -1,75 +1,92 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"simple-go-fiber-crud/database"
 	"simple-go-fiber-crud/models"
+	"simple-go-fiber-crud/repository"
+	"strconv"
 )
 
-func GetTodos(c *fiber.Ctx) error {
-	db := database.DBConn
-	var todos []models.Todo
-	db.Find(&todos)
-	return c.JSON(&todos)
+type TodoController struct {
+	todoRepository *repository.TodoRepository
 }
 
-func GetTodoById(c *fiber.Ctx) error {
-	id := c.Params("id")
-	db := database.DBConn
-	var todo models.Todo
-	err := db.Find(&todo, id).Error
-	if err != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "could not find todo"})
+func NewTodoController() *TodoController {
+	return &TodoController{
+		todoRepository: repository.NewTodoRepository(),
 	}
-	return c.JSON(&todo)
 }
 
-func CreateTodo(c *fiber.Ctx) error {
-	db := database.DBConn
+func (r *TodoController) GetTodos(c *fiber.Ctx) error {
+	data, err := r.todoRepository.FindAll()
+	if err != nil {
+		return c.JSON(
+			fiber.Map{
+				"Status":  fiber.StatusNotFound,
+				"Message": err.Error(),
+			})
+	}
+	return c.JSON(
+		fiber.Map{
+			"Status":  fiber.StatusOK,
+			"Message": "Get data successfully",
+			"Data":    data,
+		})
+}
+
+func (r *TodoController) GetTodoById(c *fiber.Ctx) error {
+	id, _ := strconv.Atoi(c.Params("id"))
+	data, err := r.todoRepository.FindById(int(id))
+	if err != nil {
+		return c.JSON(
+			fiber.Map{
+				"Status":  fiber.StatusNotFound,
+				"Message": err.Error(),
+			})
+	}
+	return c.JSON(
+		fiber.Map{
+			"Status":  fiber.StatusOK,
+			"Message": "Get data successfully",
+			"Data":    data,
+		})
+}
+
+func (r *TodoController) CreateTodo(c *fiber.Ctx) error {
 	todo := new(models.Todo)
-	err := c.BodyParser(todo)
+	err := c.BodyParser(&todo)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "check your input"})
 	}
-	err = db.Create(&todo).Error
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"status": "error", "message": "could not create todo"})
-	}
-	return c.JSON(&todo)
+	data := r.todoRepository.Create(*todo)
+	return c.JSON(&data)
 }
 
-func UpdateTodo(c *fiber.Ctx) error {
-	type UpdatedTodo struct {
-		Title     string `json:"title"`
-		Completed bool   `json:"completed"`
-	}
-	id := c.Params("id")
-	db := database.DBConn
-	var todo models.Todo
-	err := db.Find(&todo, id).Error
-	if err != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "could not find todo"})
-	}
-
-	var updatedTodo UpdatedTodo
-	err = c.BodyParser(&updatedTodo)
+func (r TodoController) UpdateTodo(c *fiber.Ctx) error {
+	id, _ := strconv.Atoi(c.Params("id"))
+	payload := new(models.Todo)
+	err := c.BodyParser(&payload)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "review your input"})
 	}
-	todo.Title = updatedTodo.Title
-	todo.Completed = updatedTodo.Completed
-	db.Save(&todo)
-	return c.JSON(&todo)
+	data := r.todoRepository.Update(id, *payload)
+	return c.JSON(&data)
 }
 
-func DeleteTodo(c *fiber.Ctx) error {
-	id := c.Params("id")
-	db := database.DBConn
-	var todo models.Todo
-	err := db.Find(&todo, id).Error
+func (r *TodoController) DeleteTodo(c *fiber.Ctx) error {
+	id, _ := strconv.Atoi(c.Params("id"))
+	result, err := r.todoRepository.Delete(id)
 	if err != nil {
-		return c.Status(404).JSON(fiber.Map{"status": "error", "message": "could not find todo"})
+		return c.JSON(fiber.Map{
+			"Status":  fiber.StatusNotFound,
+			"Message": err.Error(),
+		})
 	}
-	db.Delete(&todo)
-	return c.SendStatus(200)
+	return c.JSON(
+		fiber.Map{
+			"Status":  fiber.StatusOK,
+			"Message": fmt.Sprintf("Delete data id %s", id),
+			"Data":    result,
+		})
 }
