@@ -12,4 +12,7 @@ func SetupRoutes(app *fiber.App) {
 	app.Post("/todos", todoRoutes.CreateTodo)
 	app.Put("/todos/:id", todoRoutes.UpdateTodo)
 	app.Delete("/todos/:id", todoRoutes.DeleteTodo)
+
+	// ipfs
+	app.Post("/ipfs/post", controllers.PostUploadFile)
 }

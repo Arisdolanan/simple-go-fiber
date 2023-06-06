@@ -15,8 +15,20 @@ services:
     restart: unless-stopped # if you change [always | unless-stopped]
     networks:
       - service-network
+  ipfs:
+    image: ipfs/go-ipfs:latest
+    restart: always
+    ports:
+      - '5001:5001' # web: localhost:5000/webui
+    expose:
+      - 5001
+    volumes:
+      - ipfs-data:/var/lib/ipfs/data
+    networks:
+      - service-network
 volumes:
   postgres-data:
+  ipfs-data:
 networks:
   service-network:
     driver: bridge
