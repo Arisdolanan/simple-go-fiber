@@ -1,8 +1,8 @@
 package routers
 
 import (
-	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/handler"
 	"log"
