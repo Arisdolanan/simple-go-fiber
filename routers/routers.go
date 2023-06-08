@@ -1,10 +1,10 @@
 package routers
 
 import (
+	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/handler"
-	"github.com/valyala/fasthttp/fasthttpadaptor"
 	"log"
 	"net/http"
 	"simple-go-fiber-crud/controllers"
@@ -20,21 +20,27 @@ func SetupGraph(app *fiber.App) {
 	if err != nil {
 		log.Println(err)
 	}
-	Gh := handler.New(&handler.Config{
+	adaptorFiber := handler.New(&handler.Config{
 		Schema:   &graphqlSchema,
 		GraphiQL: true,
 		Pretty:   true,
 	})
 	app.Get("/graph", func(c *fiber.Ctx) error {
-		fasthttpadaptor.NewFastHTTPHandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			Gh.ServeHTTP(writer, request)
-		})(c.Context())
+		err = adaptor.HTTPHandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			adaptorFiber.ServeHTTP(writer, request)
+		})(c)
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 	app.Post("/graph", func(c *fiber.Ctx) error {
-		fasthttpadaptor.NewFastHTTPHandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			Gh.ServeHTTP(writer, request)
-		})(c.Context())
+		err = adaptor.HTTPHandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			adaptorFiber.ServeHTTP(writer, request)
+		})(c)
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 }
